@@ -25,8 +25,8 @@ This tool helps you annotate image datasets quickly using pretrained models (e.g
 
 ### 1. Clone the repository
 ```
-git clone https://github.com/ohsopp/AutoLabelEmbed.git
-cd AutoLabelEmbed
+git clone https://github.com/ohsopp/Yolo-ADE-Auto-Data-Embedding.git
+cd Yolo-ADE-Auto-Data-Embedding
 ```
 
 ### 2. Create and Activate a Virtual Environment
