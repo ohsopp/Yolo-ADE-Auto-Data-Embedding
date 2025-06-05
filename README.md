@@ -1,4 +1,4 @@
-# 🏷️ ADE(Auto Data Embedding) - in Progress
+# 🏷️ What's ADE? (Auto Data Embedding) - in Progress
 **A PyQt-based desktop app for automatic image labeling and embedding extraction using detection and vision models.**
 
 This tool helps you annotate image datasets quickly using pretrained models (e.g., YOLOv8~), modify labels with a GUI, and extract embeddings for downstream tasks.
@@ -25,8 +25,8 @@ This tool helps you annotate image datasets quickly using pretrained models (e.g
 
 ### 1. Clone the repository
 ```
-git clone https://github.com/ohsopp/Yolo-ADE-Auto-Data-Embedding.git
-cd Yolo-ADE-Auto-Data-Embedding
+git clone https://github.com/ohsopp/YoloADE.git
+cd YoloADE
 ```
 
 ### 2. Create and Activate a Virtual Environment
@@ -68,7 +68,7 @@ python main.py
 <br/><br/><br/>
 # 📁 Project Structure (draft)
 ```
-AutoLabelEmbed/
+YoloADE/
 ├── main.py                  # App entry point
 ├── ui/                      # PyQt GUI logic
 ├── model/                   # YOLO, CLIP, etc. wrappers
