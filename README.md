@@ -89,5 +89,7 @@ AutoLabelEmbed/
 Issues, feedback, and pull requests are welcome!
 Open a GitHub issue or fork this repo to contribute.
 
-<br/><br/>
+<br/><br/><br/>
+![Screenshot](./assets/Yolo_ADE.png)
+
 
