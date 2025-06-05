@@ -5,6 +5,10 @@ This tool helps you annotate image datasets quickly using pretrained models (e.g
 
 <br/><br/><br/>
 
+![Screenshot](./assets/Yolo_ADE.png)
+
+<br/><br/><br/>
+
 # 📦 Features (planned)
 ✅ Automatic object detection & YOLO format label generation
 
@@ -89,7 +93,6 @@ AutoLabelEmbed/
 Issues, feedback, and pull requests are welcome!
 Open a GitHub issue or fork this repo to contribute.
 
-<br/><br/><br/>
-![Screenshot](./assets/Yolo_ADE.png)
+<br/><br/>
 
 
