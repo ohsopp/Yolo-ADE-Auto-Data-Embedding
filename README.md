@@ -19,13 +19,13 @@ This tool helps you annotate image datasets quickly using pretrained models (e.g
 <br/><br/><br/>
 # 🔧 Setup Instructions
 
-## 1. Clone the repository
+### 1. Clone the repository
 ```
 git clone https://github.com/ohsopp/AutoLabelEmbed.git
 cd AutoLabelEmbed
 ```
 
-## 2. Create and Activate a Virtual Environment
+### 2. Create and Activate a Virtual Environment
 macOS/Linux
 ```
 python3 -m venv venv
@@ -38,7 +38,7 @@ python -m venv venv
 venv\Scripts\activate
 ```
 
-## 3. Install Required Packages
+### 3. Install Required Packages
 ```
 pip install -r requirements.txt
 ```
