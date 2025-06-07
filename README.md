@@ -1,4 +1,8 @@
 # 🏷️ What's ADE? (Auto Data Embedding) - in Progress
+<br/>
+
+*"Train. Detect. Automate."* <br/><br/>
+
 **A PyQt-based desktop app for automatic image labeling and embedding extraction using detection and vision models.**
 
 This tool helps you annotate image datasets quickly using pretrained models (e.g., YOLOv8~), modify labels with a GUI, and extract embeddings for downstream tasks.
