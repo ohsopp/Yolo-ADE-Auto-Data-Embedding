@@ -9,7 +9,7 @@ This tool helps you annotate image datasets quickly using pretrained models (e.g
 
 <br/><br/><br/>
 
-![Screenshot](./assets/Yolo_ADE.png)
+![Screenshot](./assets/Demo_250609.png)
 
 <br/><br/><br/>
 
