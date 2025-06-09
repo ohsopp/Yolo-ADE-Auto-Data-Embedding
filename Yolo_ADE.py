@@ -114,6 +114,7 @@ class YOLOApp(QWidget):
         progress = QProgressDialog("임베딩 중...", "취소", 0, total_frames // frame_interval, self)
         progress.setWindowTitle("진행 중")
         progress.setWindowModality(Qt.WindowModal)
+        progress.resize(400, 100)
         progress.show()
 
         frame_idx = 0
@@ -175,7 +176,12 @@ class YOLOApp(QWidget):
         progress.close()
 
         if not embedding_canceled:
-            QMessageBox.information(self, "임베딩 완료", "🎉 모든 임베딩 작업이 완료되었습니다.")
+            complete_msg = QMessageBox(self)
+            complete_msg.setWindowTitle("임베딩 완료")
+            complete_msg.setText("🎉 모든 임베딩 작업이 완료되었습니다.")
+            complete_msg.setStandardButtons(QMessageBox.Ok)
+            complete_msg.resize(400, 150)
+            complete_msg.exec_()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
