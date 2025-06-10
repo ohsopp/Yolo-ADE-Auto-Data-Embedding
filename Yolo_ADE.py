@@ -131,7 +131,7 @@ class TrainingSettingsDialog(QDialog):
             self.yaml_path = file_name
             self.yaml_label.setText(file_name.split("/")[-1])
             self.update_train_button_state()
-            
+
 
 
 class YOLOApp(QMainWindow):
@@ -206,7 +206,7 @@ class YOLOApp(QMainWindow):
 
         central_widget.setLayout(layout)
 
-        self.model = YOLO("runs/detect/train5/weights/best.pt")
+        self.model = YOLO("runs/detect/train6/weights/best.pt")
         self.cap = None
         self.video_path = None
         self.timer = QTimer()
@@ -279,13 +279,13 @@ class YOLOApp(QMainWindow):
         os.makedirs(label_dir, exist_ok=True)
         os.makedirs(img_res_dir, exist_ok=True)
 
-        model_path = "runs/detect/train5/weights/best.pt"
+        model_path = "runs/detect/train6/weights/best.pt"
         model = YOLO(model_path)
 
         cap = cv2.VideoCapture(self.video_path)
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         frame_interval = 2
-        class_map = {0: 'putter', 1: 'ball'}
+        class_map = {0: 'putter', 1: 'ball'}    # 모델의 클래스와 맞추기!!
 
         progress = QProgressDialog("임베딩 중...", "취소", 0, total_frames // frame_interval, self)
         progress.setWindowTitle("진행 중")
