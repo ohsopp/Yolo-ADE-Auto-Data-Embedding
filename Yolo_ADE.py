@@ -1,54 +1,230 @@
+
 import sys
 import cv2
 import os
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QLabel, QPushButton, QVBoxLayout,
-    QFileDialog, QHBoxLayout, QMessageBox, QProgressDialog
+    QFileDialog, QHBoxLayout, QMessageBox, QProgressDialog,
+    QMainWindow, QAction, QMenuBar, QTextEdit, QDialog,
+    QLineEdit, QFormLayout, QComboBox, QFrame
 )
 from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtCore import QTimer, Qt
+from PyQt5.QtCore import QTimer, Qt, QProcess
 from ultralytics import YOLO
+from PyQt5.QtGui import QIntValidator
+from PyQt5.QtGui import QFont
 
-class YOLOApp(QWidget):
+
+class WideMenuBar(QMenuBar):
+    def sizeHint(self):
+        size = super().sizeHint()
+        size.setWidth(1000)
+        return size
+
+class LogWindow(QDialog):
+    def __init__(self, process=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.process = process
+        self.force_close = False
+
+        self.setWindowTitle("YOLO 학습 로그")
+        self.resize(800, 600)
+        self.text_edit = QTextEdit()
+        self.text_edit.setReadOnly(True)
+        layout = QVBoxLayout()
+        layout.addWidget(self.text_edit)
+        self.setLayout(layout)
+
+    def append_text(self, text):
+        self.text_edit.append(text)
+        self.text_edit.ensureCursorVisible()
+    
+    def closeEvent(self, event):
+        if self.force_close:
+            self.force_close = False
+            event.accept()
+            return
+
+        reply = QMessageBox.question(
+            self, "학습 중단 확인",
+            "정말 닫으시겠습니까?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+
+        if reply == QMessageBox.Yes:
+            if self.process and self.process.state() == QProcess.Running:
+                print("Kill yolo process!!")
+                self.process.kill()
+            event.accept()
+        else:
+            event.ignore()
+    
+
+
+class TrainingSettingsDialog(QDialog):
+    def __init__(self, yolo_app, parent=None):
+        super().__init__(parent)
+        self.yolo_app = yolo_app  # YoloApp 인스턴스 저장
+
+        self.setWindowTitle("YOLO 학습 설정")
+        self.resize(300, 120)
+
+        # 에포크 입력 (숫자만 가능)
+        self.epoch_input = QLineEdit()
+        self.epoch_input.setValidator(QIntValidator(1, 1000, self))
+        self.epoch_input.setPlaceholderText("예: 50")
+        self.epoch_input.textChanged.connect(self.update_train_button_state)
+
+        # 배치 크기 선택 (8 ~ 512)
+        self.batch_combo = QComboBox()
+        self.batch_sizes = [2 ** i for i in range(3, 10)]  # 8 ~ 512
+        for size in self.batch_sizes:
+            self.batch_combo.addItem(str(size))
+
+        # YAML 선택
+        self.yaml_path = ""
+        self.yaml_button = QPushButton(".yaml 파일 선택")
+        self.yaml_label = QLabel("선택된 파일 없음")
+        self.yaml_button.clicked.connect(self.select_yaml_file)
+
+        # 학습 버튼
+        self.train_button = QPushButton("학습하기")
+        self.train_button.setEnabled(False)  # 초기에는 비활성화
+        self.train_button.clicked.connect(self.on_train_clicked)
+
+        # 폼 레이아웃
+        form_layout = QFormLayout()
+        form_layout.addRow("에포크 수:", self.epoch_input)
+        form_layout.addRow("배치 크기:", self.batch_combo)
+
+        yaml_layout = QHBoxLayout()
+        yaml_layout.addWidget(self.yaml_button)
+        yaml_layout.addWidget(self.yaml_label)
+
+        # 전체 레이아웃
+        layout = QVBoxLayout()
+        layout.addLayout(form_layout)
+        layout.addLayout(yaml_layout)
+        layout.addWidget(self.train_button)
+
+        self.setLayout(layout)
+
+    def on_train_clicked(self):
+        epoch = int(self.epoch_input.text())
+        batch = int(self.batch_combo.currentText())
+        yaml_file = self.yaml_path
+
+        self.yolo_app.start_training(epoch, batch, yaml_file)
+        self.accept()
+
+
+    def update_train_button_state(self):
+        # 에포크와 yaml 파일이 모두 입력되었을 때만 버튼 활성화
+        epoch_valid = bool(self.epoch_input.text().strip())
+        yaml_valid = bool(self.yaml_path)
+        self.train_button.setEnabled(epoch_valid and yaml_valid)
+
+    def select_yaml_file(self):
+        file_name, _ = QFileDialog.getOpenFileName(self, "YAML 파일 선택", "", "YAML Files (*.yaml)")
+        if file_name:
+            self.yaml_path = file_name
+            self.yaml_label.setText(file_name.split("/")[-1])
+            self.update_train_button_state()
+            
+
+
+class YOLOApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("YOLO ADE - Auto Data Embedding")
-        self.resize(800, 600)
+        self.resize(900, 700)
 
-        self.model = YOLO("runs/detect/train5/weights/best.pt")
+        self.training_dialog = TrainingSettingsDialog(self)
 
-        self.video_label = QLabel(self)
-        self.video_label.setStyleSheet("background-color: black")
+        # 메뉴바 생성
+        menu_bar = WideMenuBar(self)
+        self.setMenuBar(menu_bar)
+
+        file_menu = menu_bar.addMenu("파일")
+        open_action = QAction("영상 열기", self)
+        open_action.triggered.connect(self.open_video)
+        file_menu.addAction(open_action)
+
+        exit_action = QAction("종료", self)
+        exit_action.triggered.connect(self.close)
+        file_menu.addAction(exit_action)
+
+        help_menu = menu_bar.addMenu("도움말")
+        about_action = QAction("정보", self)
+        about_action.triggered.connect(self.show_about)
+        help_menu.addAction(about_action)
+
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+
+        self.video_label = QLabel()
+        self.video_label.setStyleSheet("background-color: black; border-radius: 5px")
+        self.video_label.setAlignment(Qt.AlignCenter)
 
         self.open_btn = QPushButton("영상 열기")
         self.pause_btn = QPushButton("⏸ 중지")
         self.embed_btn = QPushButton("임베딩 시작")
+        self.train_btn = QPushButton("YOLO 학습하기")
+
+        btn_css = "height: 20px"
+        self.open_btn.setStyleSheet(btn_css)
+        self.pause_btn.setStyleSheet(btn_css)
+        self.embed_btn.setStyleSheet(btn_css)
+        self.train_btn.setStyleSheet(btn_css)
+
         self.pause_btn.setEnabled(False)
         self.embed_btn.setEnabled(False)
 
         self.open_btn.clicked.connect(self.open_video)
         self.pause_btn.clicked.connect(self.toggle_pause)
         self.embed_btn.clicked.connect(self.start_embedding)
+        self.train_btn.clicked.connect(self.open_training_dialog)
 
         btn_layout = QHBoxLayout()
         btn_layout.addWidget(self.open_btn)
         btn_layout.addWidget(self.pause_btn)
         btn_layout.addWidget(self.embed_btn)
 
+        # 세로 구분선 추가
+        separator = QFrame()
+        separator.setFrameShape(QFrame.VLine)
+        separator.setFrameShadow(QFrame.Sunken)
+        btn_layout.addWidget(separator)
+
+        btn_layout.addWidget(self.train_btn)
+
+
         layout = QVBoxLayout()
         layout.addLayout(btn_layout)
+        layout.addWidget(self.video_label)
 
-        video_layout = QHBoxLayout()
-        video_layout.addWidget(self.video_label, alignment=Qt.AlignCenter)
+        central_widget.setLayout(layout)
 
-        layout.addLayout(video_layout)
-        self.setLayout(layout)
-
+        self.model = YOLO("runs/detect/train5/weights/best.pt")
         self.cap = None
         self.video_path = None
         self.timer = QTimer()
         self.timer.timeout.connect(self.next_frame)
         self.is_paused = False
+
+        self.log_window = None
+        self.log_buffer = []
+        self.epoch_end_reached = False
+
+    
+    def open_training_dialog(self):
+        dialog = TrainingSettingsDialog(self)
+        dialog.exec_()
+
+
+    def show_about(self):
+        QMessageBox.information(self, "정보", "\n버전 1.0.0\n")
 
     def open_video(self):
         path, _ = QFileDialog.getOpenFileName(self, "영상 선택", "", "MP4 files (*.mp4);;All files (*)")
@@ -114,7 +290,7 @@ class YOLOApp(QWidget):
         progress = QProgressDialog("임베딩 중...", "취소", 0, total_frames // frame_interval, self)
         progress.setWindowTitle("진행 중")
         progress.setWindowModality(Qt.WindowModal)
-        progress.resize(400, 100)
+        progress.resize(400, 150)
         progress.show()
 
         frame_idx = 0
@@ -131,7 +307,6 @@ class YOLOApp(QWidget):
 
             if frame_idx % frame_interval == 0:
                 h, w, _ = frame.shape
-
                 results = model(frame)[0]
                 detected_boxes = [box for box in results.boxes if int(box.cls.item()) in class_map]
 
@@ -155,7 +330,6 @@ class YOLOApp(QWidget):
                         y_center = ((y1 + y2) / 2) / h
                         width = (x2 - x1) / w
                         height = (y2 - y1) / h
-
                         f.write(f"{cls_id} {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f}\n")
 
                         color = (0, 255, 0) if cls_id == 0 else (0, 0, 255)
@@ -176,12 +350,159 @@ class YOLOApp(QWidget):
         progress.close()
 
         if not embedding_canceled:
-            complete_msg = QMessageBox(self)
-            complete_msg.setWindowTitle("임베딩 완료")
-            complete_msg.setText("🎉 모든 임베딩 작업이 완료되었습니다.")
-            complete_msg.setStandardButtons(QMessageBox.Ok)
-            complete_msg.resize(400, 150)
-            complete_msg.exec_()
+            QMessageBox.information(self, "임베딩 완료", "🎉 모든 임베딩 작업이 완료되었습니다.")
+    
+
+    def training_finished(self):
+        reply = QMessageBox.information(
+            self.log_window,  # 부모 창으로 설정
+            "학습 완료",
+            "모델 학습이 완료되었습니다.",
+            QMessageBox.Ok
+        )
+        if reply == QMessageBox.Ok:
+            self.log_window.force_close = True
+            self.log_window.close()
+    
+    def handle_process_finished(self, exitCode, exitStatus):
+        if exitStatus == QProcess.NormalExit and exitCode == 0:
+            QMessageBox.information(None, "완료", "모델 학습이 완료되었습니다.")
+            print("학습 완료 후 정상적으로 종료됨")
+            self.log_window.force_close = True
+            self.log_window.close()
+        else:
+            print("학습이 강제 종료되었거나 오류로 종료됨")
+    
+
+    def start_training(self, epoch, batch, yaml_file):
+
+        font = QFont("Consolas")
+        font.setStyleHint(QFont.Monospace)
+
+        self.epoch = epoch
+        self.batch = batch
+        self.yaml_file = yaml_file
+
+
+        # YOLO 학습 명령어 생성
+        command = [
+            "yolo", "task=detect", "mode=train",
+            "model=yolo11n.pt",  # 필요시 변경
+            f"data={yaml_file}",
+            f"epochs={epoch}",
+            "imgsz=640",
+            f"batch={batch}"
+        ]
+
+        # 명령 실행
+        self.process = QProcess()
+        self.process.setProcessChannelMode(QProcess.MergedChannels)
+
+        # 로그창 생성성
+        self.log_window = LogWindow(process=self.process)
+        self.log_window.setFont(font)
+        self.log_window.show()
+
+        try:
+            self.process.readyReadStandardOutput.disconnect()
+        except Exception:
+            pass
+
+        self.process.readyReadStandardOutput.connect(self.handle_stdout)
+        self.process.finished.connect(self.handle_process_finished)
+
+        self.process.start(" ".join(command), QProcess.ReadOnly)
+
+        self.header_printed = False
+        self.init_log_shown = False
+        self.epoch_end_reached = False
+        self.log_buffer = []
+
+
+
+    def handle_stdout(self):
+        data = self.process.readAllStandardOutput().data().decode()
+        lines = data.splitlines()
+
+        epoch = self.epoch
+        batch = self.batch
+        yaml_file = self.yaml_file
+
+        if not hasattr(self, "header_printed"):
+            self.header_printed = False
+
+        if not hasattr(self, "init_log_shown"):
+            self.init_log_shown = False
+
+
+        # 최초 출력 전 '학습 준비 중...' 출력
+        if not self.header_printed and not self.init_log_shown:
+            self.log_window.append_text("학습 준비 중...")
+            self.init_log_shown = True
+
+        for line in lines:
+            if "100%|" in line:
+                line = line.replace("#", "█")
+
+            if "100%|" in line and "Class" not in line and "all" not in line:
+                self.epoch_end_reached = True
+                self.log_buffer = [line.strip() + "\n"]
+
+            elif self.epoch_end_reached:
+                if "class" in line.lower():
+                    self.log_buffer = [l for l in self.log_buffer if "class" not in l.lower()]
+                    self.log_buffer.append(line.strip())
+                else:
+                    self.log_buffer.append(line.strip())
+
+                if "all" in line.lower():
+                    try:
+                        epoch_line = next((l for l in self.log_buffer if "100%|" in l and "all" not in l and "Class" not in l), "")
+                        all_line = next((l for l in self.log_buffer if l.lower().startswith("all")), "")
+
+                        epoch_parts = epoch_line.split()
+                        all_parts = all_line.split()
+
+                        log_epoch = epoch_parts[0]
+                        gpu_mem = epoch_parts[1]
+                        box_loss = epoch_parts[2]
+                        cls_loss = epoch_parts[3]
+                        dfl_loss = epoch_parts[4]
+                        mAP50 = all_parts[5]
+                        mAP50_95 = all_parts[6]
+
+                        if not self.header_printed:
+                            header_html = (
+                                '<pre style="background-color: #f0f0f0; font-weight: bold; margin:0;">'
+                                f"{'Epoch':>10} {'GPU_mem':>12} {'box_loss':>12} {'cls_loss':>12} "
+                                f"{'dfl_loss':>12} {'mAP50':>12} {'mAP50-95':>12}"
+                                '</pre>'
+                            )
+                            self.log_window.text_edit.clear()
+                            self.log_window.text_edit.setText(f"\n- Setting Info -\nEpoch : {epoch}\nBatch Size : {batch}\n.yaml path : {yaml_file}\n")
+                            self.log_window.append_text(header_html)
+                            self.header_printed = True
+
+                        values_html = (
+                            '<pre style="margin:0;">'
+                            f"{log_epoch:>10} {gpu_mem:>12} {box_loss:>12} {cls_loss:>12} "
+                            f"{dfl_loss:>12} {mAP50:>12} {mAP50_95:>12}"
+                            '</pre>'
+                        )
+                        separator_html = (
+                            '<pre style="margin:0; color: #d3d3d3;">' + '-' * 82 + '</pre>'
+                        )
+
+                        self.log_window.append_text(values_html)
+                        self.log_window.append_text(separator_html)
+
+                    except (IndexError, StopIteration):
+                        pass
+
+                    self.log_buffer = []
+                    self.epoch_end_reached = False
+
+    
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
