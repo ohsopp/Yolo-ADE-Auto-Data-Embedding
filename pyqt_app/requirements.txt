@@ -94,9 +94,6 @@ stack-data==0.6.3
 sympy==1.13.3
 termcolor==2.4.0
 tifffile==2023.7.10
-torch==2.4.1+cu121
-torchaudio==2.4.1+cu121
-torchvision==0.19.1+cu121
 tornado==6.4.2
 tqdm==4.67.1
 traitlets==5.14.3
@@ -112,3 +109,6 @@ webdriver-manager==4.0.2
 websocket-client==1.8.0
 wsproto==1.2.0
 zipp==3.20.2
+torch==2.4.1+cu121
+torchaudio==2.4.1+cu121
+torchvision==0.19.1+cu121
