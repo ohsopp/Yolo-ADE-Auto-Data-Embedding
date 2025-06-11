@@ -1,0 +1,11 @@
+
+- Build command in CLI -
+pyinstaller --onefile --icon=icons/icon.ico --windowed --add-binary "yolo.exe;." main.py
+
+
+
+- cuda pytorch install guide -
+pip install torch==2.4.1+cu121 torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
+
+
+cuda 버전 패키지는 따로 pytorch url을 통해 설치해줘야한다!
