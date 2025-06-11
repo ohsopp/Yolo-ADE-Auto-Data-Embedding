@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import (
     QFileDialog, QHBoxLayout, QMessageBox, QProgressDialog,
     QMainWindow, QAction, QMenuBar, QTextEdit, QDialog, QFrame
 )
-from PyQt5.QtGui import QImage, QPixmap, QFont
+from PyQt5.QtGui import QImage, QPixmap, QFont, QIcon
 from PyQt5.QtCore import QTimer, Qt, QProcess
 from ultralytics import YOLO
 
@@ -65,6 +65,7 @@ class YOLOApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("YOLO ADE - Auto Data Embedding")
+        self.setWindowIcon(QIcon("icons/icon.ico"))
         self.resize(900, 700)
 
         self.training_dialog = TrainingSettingsDialog(self)
@@ -424,7 +425,7 @@ class YOLOApp(QMainWindow):
                                 '</pre>'
                             )
                             self.log_window.text_edit.clear()
-                            self.log_window.text_edit.setText(f"\n- Setting Info -\nEpoch : {epoch}\nBatch Size : {batch}\n.yaml path : {yaml_file}\n")
+                            self.log_window.text_edit.setText(f"\n- Setting Info -\nEpoch num  : {epoch}\nBatch Size : {batch}\n.yaml path : {yaml_file}\n")
                             self.log_window.append_text(header_html)
                             self.header_printed = True
 
