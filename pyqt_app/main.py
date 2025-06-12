@@ -5,7 +5,8 @@ import os
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QLabel, QPushButton, QVBoxLayout,
     QFileDialog, QHBoxLayout, QMessageBox, QProgressDialog,
-    QMainWindow, QAction, QMenuBar, QTextEdit, QDialog, QFrame
+    QMainWindow, QAction, QMenuBar, QTextEdit, QDialog, QFrame,
+    QSizePolicy
 )
 from PyQt5.QtGui import QImage, QPixmap, QFont, QIcon
 from PyQt5.QtCore import QTimer, Qt, QProcess
@@ -84,7 +85,7 @@ class YOLOApp(QMainWindow):
         file_menu.addAction(exit_action)
 
         help_menu = menu_bar.addMenu("도움말")
-        about_action = QAction("정보", self)
+        about_action = QAction("About", self)
         about_action.triggered.connect(self.show_about)
         help_menu.addAction(about_action)
 
@@ -95,8 +96,8 @@ class YOLOApp(QMainWindow):
         self.video_label.setStyleSheet("background-color: black; border-radius: 5px")
         self.video_label.setAlignment(Qt.AlignCenter)
 
-        self.open_btn = QPushButton("영상 열기")
-        self.pause_btn = QPushButton("⏸ 중지")
+        self.open_btn = QPushButton("영상 로드")
+        self.pause_btn = QPushButton("▶ 재생")
         self.embed_btn = QPushButton("임베딩 시작")
         self.integ_btn = QPushButton("데이터 통합")
         self.train_btn = QPushButton("YOLO 학습하기")
@@ -108,6 +109,7 @@ class YOLOApp(QMainWindow):
         self.integ_btn.setStyleSheet(btn_css)
         self.train_btn.setStyleSheet(btn_css)
 
+        self.open_btn.setEnabled(False)
         self.pause_btn.setEnabled(False)
         self.embed_btn.setEnabled(False)
 
@@ -124,7 +126,8 @@ class YOLOApp(QMainWindow):
         btn_layout.addWidget(self.integ_btn)
 
 
-        model_path = "C:/Users/test/yolo11_jupyter/runs/detect/train7/weights/best.pt"
+        self.model_path = ""    # 영상 추론, 데이터 임베딩 시 사용하는 model 경로
+        self.class_map = {}
 
 
         # 세로 구분선 추가
@@ -133,21 +136,60 @@ class YOLOApp(QMainWindow):
         separator.setFrameShadow(QFrame.Sunken)
         btn_layout.addWidget(separator)
 
+        # 학습하기 버튼 추가
         btn_layout.addWidget(self.train_btn)
 
-        cur_model = QLabel(f"모델 경로 : {model_path}")
-        cur_model.setStyleSheet("font-size: 12px; font-weight: bold;")
-        cur_model.adjustSize()
+        # 가로 구분선
+        hline = QFrame()
+        hline.setFrameShape(QFrame.HLine)   # 수평선 (Horizontal Line)
+        hline.setFrameShadow(QFrame.Sunken) # 살짝 입체감 (옵션)
+        hline.setStyleSheet("color: #0f0f0f; background-color: gray; height: 1px; margin-top: 0px; margin-bottom: 0px;")
+        hline.setFixedHeight(1)
+
+        # 모델 선택 버튼
+        model_layout = QHBoxLayout()
+        self.model_btn = QPushButton("📁 모델 경로")
+        self.model_btn.setStyleSheet(btn_css)
+        self.model_btn.clicked.connect(self.open_model)
+        # 모델 경로 표시 레이블
+        self.cur_model = QLabel(f"{self.model_path}")
+        self.cur_model.setStyleSheet("font-size: 12px; font-weight: bold;")
+        self.cur_model.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        # 모델 드롭 버튼
+        self.model_drop_btn = QPushButton("✕")
+        self.model_drop_btn.setEnabled(False)
+        self.model_drop_btn.hide()
+        self.model_drop_btn.clicked.connect(self.drop_model)
+        self.model_drop_btn.setFixedSize(22, 22)
+        self.model_drop_btn.setStyleSheet("""
+            QPushButton {
+                color: black;
+                font-size: 14px;
+                background-color: #fdfdfd
+                border: 1px solid #d1d1d1;
+                transition: background-color 0.5s ease, border-color 0.5s ease
+            }
+             QPushButton:hover {
+                background-color: #e0eef9;
+                border: 1px solid #52a4e2;
+            }
+        """)
+        # 모델 레이아웃에 위젯 붙이기
+        model_layout.addWidget(self.model_btn)
+        model_layout.addWidget(self.cur_model)
+        model_layout.addWidget(self.model_drop_btn)
 
 
+        # 레이아웃 병합
         layout = QVBoxLayout()
         layout.addLayout(btn_layout)
-        layout.addWidget(cur_model, 0)
+        layout.addWidget(hline)
+        layout.addLayout(model_layout)
         layout.addWidget(self.video_label, 1)
 
         central_widget.setLayout(layout)
 
-        self.model = YOLO(model_path)
+        self.model = YOLO(self.model_path, task='detect')
         self.cap = None
         self.video_path = None
         self.timer = QTimer()
@@ -166,13 +208,15 @@ class YOLOApp(QMainWindow):
     def open_training_dialog(self):
         dialog = TrainingSettingsDialog(self)
         dialog.exec_()
-
-
+    
     def show_about(self):
-        QMessageBox.information(self, "정보", "\n버전 1.0.0\n")
+        QMessageBox.about(self, "Yolo ADE",
+                        "\nVersion: 1.0.2\n"
+                        "Copyright © 2025 ohsopp. All rights reserved.")
+
 
     def open_video(self):
-        path, _ = QFileDialog.getOpenFileName(self, "영상 선택", "", "MP4 files (*.mp4);;All files (*)")
+        path, _ = QFileDialog.getOpenFileName(self, "영상 선택", "", "MP4 files (*.mp4)")
         if path:
             self.cap = cv2.VideoCapture(path)
             self.video_path = path
@@ -181,6 +225,48 @@ class YOLOApp(QMainWindow):
             self.embed_btn.setEnabled(True)
             self.pause_btn.setText("⏸ 중지")
             self.timer.start(30)
+    
+    def open_model(self):
+        path, _ = QFileDialog.getOpenFileName(self, "모델 선택", "", "Pytorch models (*.pt)")
+        if path:
+            self.model_path = path
+            self.cur_model.setText(self.model_path)
+            self.model = YOLO(self.model_path, task='detect')
+            self.class_map = self.model.names
+            print(self.class_map)
+            self.open_btn.setEnabled(True)
+            self.model_drop_btn.setEnabled(True)
+            self.model_drop_btn.show()
+    
+    def drop_model(self):
+        self.model_path = ""
+        self.class_map = {}
+        self.cur_model.setText(self.model_path)
+        if self.model is not None:
+            del self.model  # 명시적으로 모델 드롭
+            self.model = None
+        self.model_drop_btn.setEnabled(False)   # 다시 드롭 버튼 비활성화
+        self.model_drop_btn.hide()
+        self.open_btn.setEnabled(False)
+        self.pause_btn.setText("▶ 재생")
+        self.pause_btn.setEnabled(False)
+        self.embed_btn.setEnabled(False)
+        # 1. 영상 캡처 객체 해제(열려 있다면)
+        if hasattr(self, 'cap') and self.cap is not None:
+            self.cap.release()
+            self.cap = None
+        # 2. 타이머 정지 (영상 프레임 업데이트 중이라면)
+        if hasattr(self, 'timer') and self.timer.isActive():
+            self.timer.stop()
+        # 3. 화면 검정색으로 초기화
+        black_pixmap = QPixmap(self.video_label.width(), self.video_label.height())
+        black_pixmap.fill(Qt.black)
+        self.video_label.setPixmap(black_pixmap)
+        # 4. 상태 변수 초기화
+        self.video_path = None
+        self.is_paused = False
+        print("Model Dropped.")
+
 
     def toggle_pause(self):
         self.is_paused = not self.is_paused
@@ -226,12 +312,10 @@ class YOLOApp(QMainWindow):
         os.makedirs(label_dir, exist_ok=True)
         os.makedirs(img_bbox_dir, exist_ok=True)
 
-        model = self.model      # 추론 모델과 임베딩 모델 동기화
 
         cap = cv2.VideoCapture(self.video_path)
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         frame_interval = 2
-        class_map = {0: 'putter', 1: 'ball'}    # 모델의 클래스와 맞추기!!
 
         progress = QProgressDialog("임베딩 중...", "취소", 0, total_frames // frame_interval, self)
         progress.setWindowTitle("진행 중")
@@ -253,8 +337,8 @@ class YOLOApp(QMainWindow):
 
             if frame_idx % frame_interval == 0:
                 h, w, _ = frame.shape
-                results = model(frame)[0]
-                detected_boxes = [box for box in results.boxes if int(box.cls.item()) in class_map]
+                results = self.model(frame)[0]
+                detected_boxes = [box for box in results.boxes if int(box.cls.item()) in self.class_map]
 
                 if not detected_boxes:
                     frame_idx += 1
@@ -280,7 +364,7 @@ class YOLOApp(QMainWindow):
 
                         color = (0, 255, 0) if cls_id == 0 else (0, 0, 255)
                         cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), color, 2)
-                        cv2.putText(annotated_frame, class_map[cls_id], (x1, y1 - 10),
+                        cv2.putText(annotated_frame, self.class_map[cls_id], (x1, y1 - 10),
                                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
 
                 cv2.imwrite(result_img_path, annotated_frame)
@@ -357,7 +441,26 @@ class YOLOApp(QMainWindow):
         self.process.readyReadStandardOutput.connect(self.handle_stdout)
         self.process.finished.connect(self.handle_process_finished)
 
-        self.process.start(" ".join(command), QProcess.ReadOnly)
+
+        # 개발할 때, 빌드할 때 모두 가능하도록 절대 경로 + 리스트형 인자
+        if getattr(sys, 'frozen', False):
+            base_path = sys._MEIPASS
+        else:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+        
+        yolo_path = os.path.join(base_path, "yolo.exe")
+
+        command = [
+            yolo_path,
+            "task=detect", "mode=train",
+            "model=yolo11n.pt",
+            f"data={self.yaml_file}",
+            f"epochs={self.epoch}",
+            "imgsz=640",
+            f"batch={self.batch}"
+        ]
+
+        self.process.start(command[0], command[1:])
 
         self.header_printed = False
         self.init_log_shown = False
@@ -448,7 +551,6 @@ class YOLOApp(QMainWindow):
                     self.log_buffer = []
                     self.epoch_end_reached = False
 
-    
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
