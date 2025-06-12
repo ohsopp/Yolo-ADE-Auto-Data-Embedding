@@ -9,8 +9,11 @@ This tool helps you annotate image datasets quickly using pretrained models (e.g
 
 <br/><br/><br/>
 
-![Screenshot](./assets/Demo_250612(1).png)  <br/>
-![Screenshot](./assets/Demo_250612(2).png)  <br/>
+Main View <br/>
+![Screenshot](./assets/Demo_250612(1).png)  <br/><br/>
+Auto Embedding. . . <br/>
+![Screenshot](./assets/Demo_250612(2).png)  <br/><br/>
+Train hyperparameter setting <br/>
 ![Screenshot](./assets/Demo_250612(3).png)
 
 <br/><br/><br/>
