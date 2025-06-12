@@ -86,14 +86,18 @@ pyinstaller main.py --onedir --noconsole --clean --icon=icons/icon.ico --add-bin
 # 📁 Project Structure (draft)
 ```
 pyqt_app/
-├── build_guide.txt          # Build guide
-├── main.py                  # App entry point
-├── icons/                   # PyQt GUI icons
-├── model/                   # YOLO, CLIP, etc. wrappers
+├── build_guide.txt               # Build guide
+├── main.py                       # App entry point
+├── data_integrator.py
+├── training_settings_dialog.py
+├── icons/                        # PyQt GUI icons
+├── model/                        # YOLO, CLIP, etc. wrappers
+├── dist/
+│   └── main.exe                  # .exe file
 ├── dataset/
 │   ├── images/
 │   └── labels/
-├── requirements.txt         # Requirements package settings
+├── requirements.txt              # Requirements package settings
 └── README.md
 ```
 
