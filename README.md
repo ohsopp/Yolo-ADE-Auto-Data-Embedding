@@ -36,7 +36,7 @@ Train hyperparameter setting <br/>
 
 | Release Date | Version |
 |------|------|
-| 2025-06-12 | [v1.0.2](https://github.com/ohsopp/YoloADE/releases/tag/v1.0.2) |
+| 2025-06-12 - *Recent* | [v1.0.2](https://github.com/ohsopp/YoloADE/releases/tag/v1.0.2) |
 | 2025-06-10 | [v1.0.1](https://github.com/ohsopp/YoloADE/releases/tag/v1.0.1) |
 | 2025-06-05 | [v1.0.0](https://github.com/ohsopp/YoloADE/releases/tag/v1.0.0) |
 
@@ -83,7 +83,7 @@ pyinstaller main.py --onedir --noconsole --clean --icon=icons/icon.ico --add-bin
 ```
 
 <br/><br/><br/>
-# 📁 Project Structure (draft)
+# 📁 Project Structure
 ```
 pyqt_app/
 ├── build_guide.txt               # Build guide
@@ -103,7 +103,7 @@ pyqt_app/
 
 <br/><br/><br/>
 # 🧠 Model Support
-- [x] YOLOv8 via Ultralytics  
+- [x] YOLOv11 via Ultralytics  
 - [ ] CLIP (planned)  
 - [ ] ResNet (planned)  
 - [ ] ONNX custom model support (planned)
