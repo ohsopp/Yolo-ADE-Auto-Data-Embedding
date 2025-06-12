@@ -32,7 +32,14 @@ Train hyperparameter setting <br/>
 <br/><br/><br/>
 # 🔧 Setup Instructions
 
-### 1. Clone the repository
+### 1. Download Release version
+
+| Release Date | Version |
+|------|------|
+| 2025-06-12 | [v1.0.2]([https://example.com/v1.0.0](https://github.com/ohsopp/YoloADE/releases/tag/v1.0.2)) |
+| 2025-06-10 | [v1.0.1]([https://example.com/v1.1.0](https://github.com/ohsopp/YoloADE/releases/tag/v1.0.1)) |
+| 2025-06-05 | [v1.0.0]([https://example.com/v1.2.0](https://github.com/ohsopp/YoloADE/releases/tag/v1.0.0)) |
+
 ```
 git clone https://github.com/ohsopp/YoloADE.git
 cd YoloADE
