@@ -40,10 +40,6 @@ Train hyperparameter setting <br/>
 | 2025-06-10 | [v1.0.1](https://github.com/ohsopp/YoloADE/releases/tag/v1.0.1) |
 | 2025-06-05 | [v1.0.0](https://github.com/ohsopp/YoloADE/releases/tag/v1.0.0) |
 
-```
-git clone https://github.com/ohsopp/YoloADE.git
-cd YoloADE
-```
 
 ### 2. Create and Activate a Virtual Environment
 macOS/Linux
@@ -63,37 +59,41 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-<br/>
 Example `requirements.txt`
 ```
-pyqt5
-opencv-python
-ultralytics
-torch
-numpy
-Pillow
-matplotlib
+PyQt5==5.15.11
+opencv-python==4.11.0.86
+ultralytics==8.3.145
+numpy==1.24.4
+pillow==10.4.0
+matplotlib==3.7.5
 ```
 
-<br/><br/><br/>
-# ▶️ How to Run
+### 4. Install CUDA pytorch
 ```
-python main.py
+pip install torch==2.4.1+cu121 torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
+```
+
+<br/>
+
+<br/><br/><br/>
+# ▶️ How to Build
+```
+pyinstaller main.py --onedir --noconsole --clean --icon=icons/icon.ico --add-binary "yolo.exe;."
 ```
 
 <br/><br/><br/>
 # 📁 Project Structure (draft)
 ```
-YoloADE/
+pyqt_app/
+├── build_guide.txt          # Build guide
 ├── main.py                  # App entry point
-├── ui/                      # PyQt GUI logic
+├── icons/                   # PyQt GUI icons
 ├── model/                   # YOLO, CLIP, etc. wrappers
-├── utils/                   # Helpers (I/O, label formatting)
 ├── dataset/
 │   ├── images/
 │   └── labels/
-├── embeddings/              # Saved embeddings
-├── requirements.txt
+├── requirements.txt         # Requirements package settings
 └── README.md
 ```
 
