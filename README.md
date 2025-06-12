@@ -9,9 +9,12 @@ This tool helps you annotate image datasets quickly using pretrained models (e.g
 
 <br/><br/><br/>
 
-![Screenshot](./assets/Demo_250610(1).png)  <br/>
-![Screenshot](./assets/Demo_250610(2).png)  <br/>
-![Screenshot](./assets/Demo_250609.png)
+Main View <br/>
+![Screenshot](./assets/Demo_250612(1).png)  <br/><br/>
+Auto Embedding. . . <br/>
+![Screenshot](./assets/Demo_250612(2).png)  <br/><br/>
+Train hyperparameter setting <br/>
+![Screenshot](./assets/Demo_250612(3).png)
 
 <br/><br/><br/>
 
@@ -29,11 +32,14 @@ This tool helps you annotate image datasets quickly using pretrained models (e.g
 <br/><br/><br/>
 # 🔧 Setup Instructions
 
-### 1. Clone the repository
-```
-git clone https://github.com/ohsopp/YoloADE.git
-cd YoloADE
-```
+### 1. Download Release version
+
+| Release Date | Version |
+|------|------|
+| 2025-06-12 - *Recent* | [v1.0.2](https://github.com/ohsopp/YoloADE/releases/tag/v1.0.2) |
+| 2025-06-10 | [v1.0.1](https://github.com/ohsopp/YoloADE/releases/tag/v1.0.1) |
+| 2025-06-05 | [v1.0.0](https://github.com/ohsopp/YoloADE/releases/tag/v1.0.0) |
+
 
 ### 2. Create and Activate a Virtual Environment
 macOS/Linux
@@ -53,43 +59,51 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-<br/>
 Example `requirements.txt`
 ```
-pyqt5
-opencv-python
-ultralytics
-torch
-numpy
-Pillow
-matplotlib
+PyQt5==5.15.11
+opencv-python==4.11.0.86
+ultralytics==8.3.145
+numpy==1.24.4
+pillow==10.4.0
+matplotlib==3.7.5
+```
+
+### 4. Install CUDA pytorch
+```
+pip install torch==2.4.1+cu121 torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
+```
+
+<br/>
+
+<br/><br/><br/>
+# ▶️ How to Build
+```
+pyinstaller main.py --onedir --noconsole --clean --icon=icons/icon.ico --add-binary "yolo.exe;."
 ```
 
 <br/><br/><br/>
-# ▶️ How to Run
+# 📁 Project Structure
 ```
-python main.py
-```
-
-<br/><br/><br/>
-# 📁 Project Structure (draft)
-```
-YoloADE/
-├── main.py                  # App entry point
-├── ui/                      # PyQt GUI logic
-├── model/                   # YOLO, CLIP, etc. wrappers
-├── utils/                   # Helpers (I/O, label formatting)
+pyqt_app/
+├── build_guide.txt               # Build guide
+├── main.py                       # App entry point
+├── data_integrator.py
+├── training_settings_dialog.py
+├── icons/                        # PyQt GUI icons
+├── model/                        # YOLO, CLIP, etc. wrappers
+├── dist/
+│   └── main.exe                  # .exe file
 ├── dataset/
 │   ├── images/
 │   └── labels/
-├── embeddings/              # Saved embeddings
-├── requirements.txt
+├── requirements.txt              # Requirements package settings
 └── README.md
 ```
 
 <br/><br/><br/>
 # 🧠 Model Support
-- [x] YOLOv8 via Ultralytics  
+- [x] YOLOv11 via Ultralytics  
 - [ ] CLIP (planned)  
 - [ ] ResNet (planned)  
 - [ ] ONNX custom model support (planned)
